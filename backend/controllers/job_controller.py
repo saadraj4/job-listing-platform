@@ -28,7 +28,6 @@ def create_job(data):
         )
         db.session.add(new_job)
         db.session.commit()
-        print("new_job: ", new_job.to_dict())
         return new_job, None, 201
     except Exception as e:
         db.session.rollback()
