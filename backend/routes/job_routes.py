@@ -1,29 +1,58 @@
+# Import necessary modules
 from flask import Blueprint, jsonify, request
-from controllers.job_controller import get_all_jobs, get_job_by_id, create_job, delete_job
+from controllers.job_controller import get_all_jobs, get_job_by_id, create_job, update_job, remove_job
 
+# Blueprint for job routes
 job_bp = Blueprint("job_routes", __name__)
 
-@job_bp.route("/jobs", methods=["GET"])
-def fetch_jobs():
-    jobs = get_all_jobs()
-    return jsonify([job.to_dict() for job in jobs])
+# Route to create a new job
+@job_bp.route("/createJob", methods=["POST"])
+def createJob():
+    if not request.json:
+        return jsonify({"message": "Request body must be JSON"}), 400
+    
+    new_job, error, status_code = create_job(request.json)
+    if error:
+        return jsonify(error), status_code
+    return jsonify(new_job.to_dict()), status_code
 
-@job_bp.route("/jobs/<int:job_id>", methods=["GET"])
-def fetch_job(job_id):
-    job = get_job_by_id(job_id)
-    if not job:
-        return jsonify({"message": "Job not found"}), 404
-    return jsonify(job.to_dict())
+# Route to delete a job
+@job_bp.route("/removeJob/<int:job_id>", methods=["DELETE"])
+def removeJob(job_id):
+    success, error, status_code = remove_job(job_id)
+    if error:
+        return jsonify(error), status_code
+    return jsonify({"message": "Job deleted successfully"}), status_code
 
-@job_bp.route("/jobs", methods=["POST"])
-def add_job():
-    data = request.json
-    new_job = create_job(data)
-    return jsonify(new_job.to_dict()), 201
 
-@job_bp.route("/jobs/<int:job_id>", methods=["DELETE"])
-def remove_job(job_id):
-    success = delete_job(job_id)
-    if not success:
-        return jsonify({"message": "Job not found"}), 404
-    return jsonify({"message": "Job deleted successfully"})
+# Route to update a job
+@job_bp.route("/updateJob/<int:job_id>", methods=["PUT"])
+def updateJob(job_id):
+    if not request.json:
+        return jsonify({"message": "Request body must be JSON"}), 400
+    
+    job, error, status_code = update_job(job_id, request.json)
+    if error:
+        return jsonify(error), status_code
+    return jsonify(job.to_dict()), status_code
+
+
+# Route to get a job by id
+@job_bp.route("/getJobById/<int:job_id>", methods=["GET"])
+def getJobById(job_id):
+    job, error, status_code = get_job_by_id(job_id)
+    if error:
+        return jsonify(error), status_code
+    return jsonify(job.to_dict()), status_code
+
+
+# Route to get all jobs
+@job_bp.route("/getAllJobs", methods=["GET"])
+def getAllJobs():
+    try:
+        jobs, error, status_code = get_all_jobs()
+        if error:
+            return jsonify(error), status_code
+        return jsonify([job.to_dict() for job in jobs]), status_code
+    except Exception as e:
+        return jsonify({"message": f"Server error: {str(e)}"}), 500

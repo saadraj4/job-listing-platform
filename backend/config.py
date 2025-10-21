@@ -1,3 +1,4 @@
+# Import necessary modules
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
@@ -19,7 +20,7 @@ database_uri = f"{engine_url}{DB_NAME}"
 # Create engine
 engine = create_engine(database_uri)
 
-# Check if database exists, if not — create it
+# Check if database exists, if not create it
 if not database_exists(engine.url):
     print(f"Database '{DB_NAME}' not found. Creating...")
     create_database(engine.url)
@@ -27,5 +28,4 @@ if not database_exists(engine.url):
 else:
     print("Database already exists.")
 SQLALCHEMY_DATABASE_URI = database_uri
-# SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
