@@ -7,10 +7,13 @@ class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
     company = db.Column(db.String(120), nullable=False)
-    location = db.Column(db.String(120))
+    location = db.Column(db.String(120), nullable=False)
     salary = db.Column(db.String(50))
     description = db.Column(db.Text)
-    posted_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    posting_date = db.Column(db.DateTime, default=datetime.utcnow)
+    job_type = db.Column(db.String(50))  # e.g. 'Full-time', 'Part-time', 'Internship'
+    tags = db.Column(db.String(255))     # Comma-separated tags like "Python,Remote,Data"
 
     def to_dict(self):
         return {
@@ -20,5 +23,7 @@ class Job(db.Model):
             "location": self.location,
             "salary": self.salary,
             "description": self.description,
-            "posted_at": self.posted_at.strftime("%Y-%m-%d %H:%M:%S")
+            "posting_date": self.posting_date.strftime("%Y-%m-%d %H:%M:%S"),
+            "job_type": self.job_type,
+            "tags": self.tags.split(",") if self.tags else []
         }

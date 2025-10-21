@@ -2,6 +2,7 @@ from flask import Flask
 from config import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_TRACK_MODIFICATIONS
 from db import db
 from routes.job_routes import job_bp
+from models.job import Job
 
 app = Flask(__name__)
 
@@ -18,6 +19,11 @@ print("database initialized")
 # Register blueprints
 app.register_blueprint(job_bp, url_prefix="/api")
 
+
+with app.app_context():
+    db.create_all()
+
+    
 @app.route("/")
 def home():
     return "Job Portal Backend is Running!"
