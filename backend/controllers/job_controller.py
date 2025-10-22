@@ -52,9 +52,16 @@ def remove_job(job_id):
 # Controller functions for update Job API
 def update_job(job_id, data):
     try:
+        print(f"Updating job {job_id} with data: {data}")
+        
         job = Job.query.get(job_id)
         if not job:
+            print(f"Job {job_id} not found")
             return None, {"message": "Job not found"}, 404
+        
+        # Handle tags conversion if it's a list
+        if "tags" in data and isinstance(data["tags"], list):
+            data["tags"] = ",".join(data["tags"])
         
         # Update fields if provided
         if "title" in data:
@@ -72,9 +79,12 @@ def update_job(job_id, data):
         if "tags" in data:
             job.tags = data["tags"]
         
+        print(f"Job before commit: {job.to_dict()}")
         db.session.commit()
+        print(f"Job updated successfully: {job.to_dict()}")
         return job, None, 200
     except Exception as e:
+        print(f"Error updating job: {str(e)}")
         db.session.rollback()
         return None, {"message": f"Database error: {str(e)}"}, 500
 

@@ -28,13 +28,23 @@ def removeJob(job_id):
 # Route to update a job
 @job_bp.route("/updateJob/<int:job_id>", methods=["PUT"])
 def updateJob(job_id):
-    if not request.json:
-        return jsonify({"message": "Request body must be JSON"}), 400
-    
-    job, error, status_code = update_job(job_id, request.json)
-    if error:
-        return jsonify(error), status_code
-    return jsonify(job.to_dict()), status_code
+    try:
+        print(f"PUT request received for job {job_id}")
+        print(f"Request data: {request.json}")
+        
+        if not request.json:
+            return jsonify({"message": "Request body must be JSON"}), 400
+        
+        job, error, status_code = update_job(job_id, request.json)
+        if error:
+            print(f"Error in update_job: {error}")
+            return jsonify(error), status_code
+        
+        print(f"Job updated successfully, returning: {job.to_dict()}")
+        return jsonify(job.to_dict()), status_code
+    except Exception as e:
+        print(f"Exception in updateJob route: {str(e)}")
+        return jsonify({"message": f"Server error: {str(e)}"}), 500
 
 
 # Route to get a job by id
