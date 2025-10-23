@@ -2,7 +2,8 @@
 from flask import request, jsonify
 from models.job import Job
 from db import db
-from datetime import datetime
+from datetime import datetime, timedelta
+import re
 
 
 # Controller functions for create Job API
@@ -132,3 +133,92 @@ def get_all_jobs():
     except Exception as e:
         return None, {"message": f"Database error: {str(e)}"}, 500
 
+
+# controller function to bulk store the data into db scraped from https://www.actuarylist.com/
+def bulk_insert_jobs():
+    try:
+        data = request.get_json()
+
+       
+        print(data[0:1])
+        if not isinstance(data, list):
+            return jsonify({"error": "Expected a list of job objects"}), 400
+
+        jobs_to_add = []
+
+        for job_data in data:
+            title = job_data.get("title")
+            company = job_data.get("company")
+            location = clean_text(job_data.get("location", ""))
+            salary = remove_emojis(job_data.get("salary", ""))
+            description = job_data.get("description")
+            job_type = job_data.get("job_type", "Full-time")
+            tags = clean_text(job_data.get("tags", ""))
+            posting_raw = job_data.get("posting_date", "")
+
+            # 🕒 Parse posting_date like '10h ago', '12d ago', etc.
+            posting_date = parse_posting_date(posting_raw)
+            existing = Job.query.filter_by(title=title, company=company).first()
+            if existing:
+                continue
+
+            new_job = Job(
+                title=title,
+                company=company,
+                location=location,
+                salary=salary,
+                description=description,
+                job_type=job_type,
+                tags=tags,
+                posting_date=posting_date  # ✅ store correct posting date
+            )
+            jobs_to_add.append(new_job)
+
+        db.session.add_all(jobs_to_add)
+        db.session.commit()
+
+        return jsonify({"message": f"{len(jobs_to_add)} jobs stored successfully"}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+
+def remove_emojis(text):
+    if not text:
+        return text
+    return re.sub(r'[^\x00-\x7F]+', '', text)
+
+def clean_text(value):
+    if not value:
+        return ""
+    parts = [p.strip() for p in value.split(",") if p.strip() and p.strip().upper() != "N/A"]
+    return ", ".join(parts)
+
+def parse_posting_date(raw):
+    """Convert text like '10h ago', '12d ago', '2w ago' into datetime."""
+    if not raw or raw == "N/A":
+        return datetime.utcnow()
+
+    raw = raw.lower().strip()
+    now = datetime.utcnow()
+
+    try:
+        if "h" in raw:
+            hours = int(re.search(r"(\d+)", raw).group(1))
+            return now - timedelta(hours=hours)
+        elif "d" in raw:
+            days = int(re.search(r"(\d+)", raw).group(1))
+            return now - timedelta(days=days)
+        elif "w" in raw:
+            weeks = int(re.search(r"(\d+)", raw).group(1))
+            return now - timedelta(weeks=weeks)
+        elif "m" in raw:  # for months (approx)
+            months = int(re.search(r"(\d+)", raw).group(1))
+            return now - timedelta(days=30 * months)
+    except:
+        pass
+
+    # Default: today
+    return now

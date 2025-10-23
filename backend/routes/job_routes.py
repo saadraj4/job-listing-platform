@@ -1,6 +1,6 @@
 # Import necessary modules
 from flask import Blueprint, jsonify, request
-from controllers.job_controller import get_all_jobs, get_job_by_id, create_job, update_job, remove_job
+from controllers.job_controller import get_all_jobs, get_job_by_id, create_job, update_job, remove_job, bulk_insert_jobs
 
 # Blueprint for job routes
 job_bp = Blueprint("job_routes", __name__)
@@ -66,3 +66,9 @@ def getAllJobs():
         return jsonify([job.to_dict() for job in jobs]), status_code
     except Exception as e:
         return jsonify({"message": f"Server error: {str(e)}"}), 500
+
+
+# Route to bulk store the data into database (scraped data from https://www.actuarylist.com/)
+@job_bp.route("/jobs/bulk", methods=["POST"])
+def bulk_insert_jobs_route():
+    return bulk_insert_jobs()
