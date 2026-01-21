@@ -39,16 +39,16 @@ page = 1
 max_pages = 2
 all_jobs = []
 
-print("🚀 Scraping ActuaryList...")
+print("Scraping ActuaryList...")
 
 try:
     while page <= max_pages:
-        print(f"\n📄 Scraping Page {page}...")
+        print(f"\nScraping Page {page}...")
         wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "article")))
         time.sleep(2)
 
         job_cards = driver.find_elements(By.CSS_SELECTOR, "article")
-        print(f"🧩 Found {len(job_cards)} jobs on page {page}")
+        print(f"Found {len(job_cards)} jobs on page {page}")
 
         for card in job_cards:
             try:
@@ -56,7 +56,6 @@ try:
                 title = clean_text(card.find_element(By.CSS_SELECTOR, "p.Job_job-card__position__ic1rc").text)
                 link = card.find_element(By.CSS_SELECTOR, "a.Job_job-page-link__a5I5g").get_attribute("href")
                 salary = card.find_element(By.CSS_SELECTOR, "p.Job_job-card__salary__QZswp").text if card.find_elements(By.CSS_SELECTOR, "p.Job_job-card__salary__QZswp") else "N/A"
-
                 salary = clean_text(salary)
                 locations = [clean_text(loc.text) for loc in card.find_elements(By.CSS_SELECTOR, "a.Job_job-card__location__bq7jX")]
                 tags = [clean_text(tag.text) for tag in card.find_elements(By.CSS_SELECTOR, "div.Job_job-card__tags__zfriA a")]
@@ -81,7 +80,7 @@ try:
                 })
 
             except Exception as e:
-                print(f"⚠️ Error parsing card: {e}")
+                print(f"Error parsing card: {e}")
 
         # Handle pagination
         try:
@@ -89,11 +88,11 @@ try:
             driver.execute_script("arguments[0].scrollIntoView(true);", next_button)
             time.sleep(1)
             next_button.click()
-            print("➡️ Going to next page...")
+            print("Going to next page...")
             page += 1
             time.sleep(3)
         except (NoSuchElementException, TimeoutException):
-            print("🛑 No more pages.")
+            print("No more pages.")
             break
         except ElementClickInterceptedException:
             print("⚠️ Next button overlapped — retrying JS click...")
@@ -104,7 +103,7 @@ try:
     print(f"\n✅ Scraping complete. Total jobs: {len(all_jobs)}")
 
 except Exception as e:
-    print(f"❌ Unexpected error: {e}")
+    print(f"Unexpected error: {e}")
 
 finally:
     driver.quit()
@@ -120,4 +119,4 @@ if all_jobs:
         )
         print("✅ API Response:", response.json())
     except Exception as e:
-        print(f"❌ Failed to send jobs to backend: {e}")
+        print(f"Failed to send jobs to backend: {e}")

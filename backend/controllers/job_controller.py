@@ -170,7 +170,7 @@ def bulk_insert_jobs():
                 description=description,
                 job_type=job_type,
                 tags=tags,
-                posting_date=posting_date  # ✅ store correct posting date
+                posting_date=posting_date 
             )
             jobs_to_add.append(new_job)
 
